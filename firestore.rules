@@ -25,12 +25,15 @@ service cloud.firestore {
     // Any signed-in user can read.
     // Only the actual sender can create a message.
     // Sender can delete their own message; admins can delete any message.
+    // Any user can delete messages older than 7 days (for client-side pruning).
     match /messages/{msgId} {
       allow read:   if request.auth != null;
       allow create: if request.auth != null
                     && request.auth.uid == request.resource.data.senderId;
       allow delete: if request.auth != null
-                    && (request.auth.uid == resource.data.senderId || isAdmin());
+                    && (request.auth.uid == resource.data.senderId
+                        || isAdmin()
+                        || resource.data.timestamp < request.time - duration.value(7, 'd'));
     }
 
     // ── DM Chats ───────────────────────────────────────────────────────────
