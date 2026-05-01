@@ -923,3 +923,19 @@ body {
 }
 .msg-group.own:hover .msg-delete-btn { opacity: 1; }
 .msg-delete-btn:hover { color: #ef4444 !important; opacity: 1 !important; }
+
+/* ─── ADMIN / MODERATOR BADGE ────────────────────── */
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #f59e0b;
+    opacity: 0.9;
+}
+.admin-badge i {
+    font-size: 9px;
+}
