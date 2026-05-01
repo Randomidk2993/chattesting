@@ -296,6 +296,29 @@ function bootApp() {
     }
 
     loadConvList();
+    pruneOldMessages();
+}
+
+// ─── AUTO-DELETE MESSAGES OLDER THAN 7 DAYS ──────────────────────────────────
+async function pruneOldMessages() {
+    try {
+        const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const snap = await db.collection('messages')
+            .where('timestamp', '<', firebase.firestore.Timestamp.fromDate(cutoff))
+            .limit(400)
+            .get();
+
+        if (snap.empty) return;
+
+        // Batch delete in chunks of 400
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        console.log(`Pruned ${snap.size} old message(s).`);
+    } catch (err) {
+        // Silently ignore — non-critical cleanup
+        console.warn('Message pruning skipped:', err.message);
+    }
 }
 
 function renderAvatar(id, name, color) {
@@ -492,6 +515,11 @@ function renderMsg(msg) {
         ? `<button class="msg-delete-btn" title="Delete message" onclick="deleteOwnMessage('${msg.id}', this)"><i class="fas fa-trash"></i></button>`
         : '';
 
+    const isAdminSender = ADMIN_EMAILS.includes((msg.senderEmail || '').toLowerCase());
+    const adminBadge = isAdminSender
+        ? `<span class="admin-badge"><i class="fas fa-shield-alt"></i> Chat Moderator</span>`
+        : '';
+
     group.innerHTML = `
         <div class="msg-av" style="background:${avColor}">${avInitial}</div>
         <div class="msg-body">
@@ -500,6 +528,7 @@ function renderMsg(msg) {
                 <span>${timeStr}</span>${deleteBtn}
             </div>
             <div class="${bubbleClass}">${bubbleInner}</div>
+            ${adminBadge}
         </div>
     `;
 
@@ -550,6 +579,7 @@ async function sendMessage() {
         senderId:    currentUser.uid,
         senderName:  currentUserData.username,
         senderColor: currentUserData.color,
+        senderEmail: currentUser.email || '',
         text,
         wasFiltered,
         timestamp:   firebase.firestore.FieldValue.serverTimestamp()
@@ -610,6 +640,7 @@ async function postImage(base64) {
         senderId:    currentUser.uid,
         senderName:  currentUserData.username,
         senderColor: currentUserData.color,
+        senderEmail: currentUser.email || '',
         text:        '',
         imageBase64: base64,
         timestamp:   firebase.firestore.FieldValue.serverTimestamp()
