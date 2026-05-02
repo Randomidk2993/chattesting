@@ -14,12 +14,13 @@ let chatsUnsub      = null;
 let lastDateStr     = null;
 let banUnsub        = null;   // realtime listener for ban status
 let restrictUnsub   = null;   // realtime listener for restriction status
+let adminUserUnsub  = null;   // realtime listener for selected admin user
+let adminRestrictUnsub = null; // realtime listener for selected admin user's restriction
 
 // ─── ADMIN CONFIG ────────────────────────────────────────────────────────────
 const ADMIN_EMAILS = [
     '30copallock@pulaskischools.org',
-    '30chpallock@pulaskischools.org',
-    'chilten44pallock@gmail.com',
+    'coltenboop@gmail.com',
     'ohioshared@gmail.com'
 ];
 
@@ -743,7 +744,8 @@ function toggleSearch() {
     box.classList.toggle('hidden', !open);
     if (open) {
         document.getElementById('search-input').focus();
-        document.getElementById('search-results').innerHTML = '';
+        // Show all users immediately on open
+        searchUsers('');
     }
 }
 
@@ -753,24 +755,23 @@ function closeSearch() {
 
 async function searchUsers(query) {
     const results = document.getElementById('search-results');
-    if (!query || query.length < 1) { results.innerHTML = ''; return; }
-
-    const q = query.toLowerCase();
     try {
-        const snap = await db.collection('users')
-            .orderBy('usernameLower')
-            .startAt(q)
-            .endAt(q + '\uf8ff')
-            .limit(10)
-            .get();
-
+        let snap;
+        if (!query || query.length < 1) {
+            snap = await db.collection('users').orderBy('usernameLower').limit(50).get();
+        } else {
+            const q = query.toLowerCase();
+            snap = await db.collection('users')
+                .orderBy('usernameLower')
+                .startAt(q).endAt(q + '\uf8ff')
+                .limit(20).get();
+        }
         results.innerHTML = '';
         let any = false;
-
         snap.forEach(doc => {
             if (doc.id === currentUser.uid) return;
             any = true;
-            const u   = doc.data();
+            const u = doc.data();
             const row = document.createElement('div');
             row.className = 'search-result-item';
             row.innerHTML = `
@@ -780,7 +781,6 @@ async function searchUsers(query) {
             row.addEventListener('click', () => openOrCreateDM(doc.id, u));
             results.appendChild(row);
         });
-
         if (!any) results.innerHTML = '<div class="search-result-item empty">No users found</div>';
     } catch (err) {
         console.error('Search error:', err);
@@ -820,8 +820,10 @@ async function openOrCreateDM(otherId, otherUser) {
 function logout() {
     if (msgUnsub)      msgUnsub();
     if (chatsUnsub)    chatsUnsub();
-    if (banUnsub)      banUnsub();
-    if (restrictUnsub) restrictUnsub();
+    if (banUnsub)          banUnsub();
+    if (restrictUnsub)     restrictUnsub();
+    if (adminUserUnsub)    { adminUserUnsub(); adminUserUnsub = null; }
+    if (adminRestrictUnsub){ adminRestrictUnsub(); adminRestrictUnsub = null; }
     currentUser     = null;
     currentUserData = null;
     currentChatId   = null;
@@ -849,6 +851,8 @@ function openMessagesView() {
     document.getElementById('chat-panel').classList.remove('hidden');
     document.getElementById('nav-admin')?.classList.remove('active');
     document.getElementById('nav-messages')?.classList.add('active');
+    if (adminUserUnsub)     { adminUserUnsub();     adminUserUnsub = null; }
+    if (adminRestrictUnsub) { adminRestrictUnsub(); adminRestrictUnsub = null; }
 }
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
@@ -860,43 +864,46 @@ function openAdminPanel() {
     document.getElementById('admin-panel').classList.remove('hidden');
     document.getElementById('nav-messages')?.classList.remove('active');
     document.getElementById('nav-admin')?.classList.add('active');
+    // Clean up any previous user listeners
+    if (adminUserUnsub)     { adminUserUnsub();     adminUserUnsub = null; }
+    if (adminRestrictUnsub) { adminRestrictUnsub(); adminRestrictUnsub = null; }
     // Reset state
     adminSelectedUser = null;
     document.getElementById('admin-user-search').value = '';
-    document.getElementById('admin-search-results').innerHTML = '';
     document.getElementById('admin-selected-user').classList.add('hidden');
+    // Load all users immediately
+    adminSearchUsers('');
 }
 
 async function adminSearchUsers(query) {
     const results = document.getElementById('admin-search-results');
-    if (!query || query.length < 1) { results.innerHTML = ''; return; }
-
-    const q = query.toLowerCase();
     try {
-        const snap = await db.collection('users')
-            .orderBy('usernameLower')
-            .startAt(q)
-            .endAt(q + '\uf8ff')
-            .limit(10)
-            .get();
-
+        let snap;
+        if (!query || query.length < 1) {
+            snap = await db.collection('users').orderBy('usernameLower').limit(50).get();
+        } else {
+            const q = query.toLowerCase();
+            snap = await db.collection('users')
+                .orderBy('usernameLower')
+                .startAt(q).endAt(q + '\uf8ff')
+                .limit(20).get();
+        }
         results.innerHTML = '';
         let any = false;
-
         snap.forEach(doc => {
-            if (doc.id === currentUser.uid) return; // don't show self
+            if (doc.id === currentUser.uid) return;
             any = true;
-            const u   = doc.data();
+            const u = doc.data();
             const row = document.createElement('div');
             row.className = 'admin-result-item';
             row.innerHTML = `
                 <div class="s-av" style="background:${u.color}">${esc(initial(u.username))}</div>
                 <span>${esc(u.username)}</span>
+                ${u.banned ? '<span class="admin-user-tag banned-tag">Banned</span>' : ''}
             `;
             row.addEventListener('click', () => selectAdminUser(doc.id, u));
             results.appendChild(row);
         });
-
         if (!any) results.innerHTML = '<div class="admin-result-item" style="cursor:default;opacity:0.6">No users found</div>';
     } catch (err) {
         console.error('Admin search error:', err);
@@ -906,12 +913,15 @@ async function adminSearchUsers(query) {
 function selectAdminUser(uid, userData) {
     adminSelectedUser = { uid, ...userData };
 
+    // Clean up previous listeners
+    if (adminUserUnsub)     { adminUserUnsub();     adminUserUnsub = null; }
+    if (adminRestrictUnsub) { adminRestrictUnsub(); adminRestrictUnsub = null; }
+
     const selAv = document.getElementById('admin-sel-av');
     selAv.textContent      = initial(userData.username);
     selAv.style.background = userData.color;
     document.getElementById('admin-sel-name').textContent  = userData.username;
     document.getElementById('admin-sel-email').textContent = userData.email || '(no email)';
-
     document.getElementById('admin-selected-user').classList.remove('hidden');
     document.getElementById('admin-search-results').innerHTML = '';
     document.getElementById('admin-user-search').value = '';
@@ -920,6 +930,36 @@ function selectAdminUser(uid, userData) {
     setAdminStatus('restrict-status', '');
     setAdminStatus('ban-status', '');
     setAdminStatus('delete-msgs-status', '');
+
+    // Realtime listener — ban status
+    adminUserUnsub = db.collection('users').doc(uid).onSnapshot(snap => {
+        if (!snap.exists) return;
+        const d = snap.data();
+        adminSelectedUser = { ...adminSelectedUser, ...d, uid };
+        const badge = document.getElementById('admin-ban-badge');
+        if (badge) badge.textContent = d.banned ? '🔴 Currently Banned' : '🟢 Not Banned';
+        setAdminStatus('ban-status',
+            d.banned ? 'This user is currently banned.' : 'This user is not banned.',
+            !d.banned);
+    });
+
+    // Realtime listener — restriction status
+    adminRestrictUnsub = db.collection('restrictions').doc(uid).onSnapshot(snap => {
+        const badge = document.getElementById('admin-restrict-badge');
+        if (snap.exists) {
+            const d = snap.data();
+            const until = d.until ? d.until.toDate() : null;
+            if (until && until > new Date()) {
+                const mins = Math.ceil((until - new Date()) / 60000);
+                const label = mins >= 1440 ? `${Math.ceil(mins/1440)}d` : mins >= 60 ? `${Math.ceil(mins/60)}h` : `${mins}m`;
+                if (badge) badge.textContent = `🟠 Restricted (${label} left)`;
+                setAdminStatus('restrict-status', `Restricted until ${until.toLocaleString()}`, false);
+                return;
+            }
+        }
+        if (badge) badge.textContent = '🟢 Not Restricted';
+        setAdminStatus('restrict-status', 'This user is not restricted.', true);
+    });
 }
 
 function setAdminStatus(id, msg, ok = false) {
