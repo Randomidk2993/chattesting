@@ -216,6 +216,7 @@
                     <div class="admin-action-block">
                         <label class="admin-section-title"><i class="fas fa-clock"></i> Restrict Chatting</label>
                         <p class="admin-action-desc">Prevent this user from sending messages for a set time.</p>
+                        <div class="admin-live-status" id="admin-restrict-badge">Loading...</div>
                         <div class="admin-restrict-row">
                             <input type="number" id="restrict-duration" class="admin-num-input" min="1" max="10080" value="60" placeholder="Minutes">
                             <select id="restrict-unit" class="admin-select">
@@ -232,6 +233,7 @@
                     <div class="admin-action-block">
                         <label class="admin-section-title"><i class="fas fa-user-slash"></i> Ban User</label>
                         <p class="admin-action-desc">Permanently ban this user from the platform. They will not be able to log in.</p>
+                        <div class="admin-live-status" id="admin-ban-badge">Loading...</div>
                         <button class="admin-btn admin-btn-danger" onclick="banUser()"><i class="fas fa-user-slash"></i> Ban User</button>
                         <button class="admin-btn admin-btn-success" onclick="unbanUser()" style="margin-left:8px"><i class="fas fa-user-check"></i> Unban</button>
                         <div id="ban-status" class="admin-status-msg"></div>
