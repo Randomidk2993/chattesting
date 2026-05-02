@@ -939,3 +939,78 @@ body {
 .admin-badge i {
     font-size: 9px;
 }
+
+/* ─── BAN SCREEN ─────────────────────────────────── */
+.ban-card {
+    background: var(--surface);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 20px;
+    padding: 44px 40px 36px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(239,68,68,0.15);
+    animation: cardIn 0.4s cubic-bezier(.22,1,.36,1) both;
+}
+.ban-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.12);
+    border: 2px solid rgba(239,68,68,0.35);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+    color: #ef4444;
+}
+.ban-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 12px;
+}
+.ban-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 20px;
+}
+.ban-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 0 20px;
+}
+.ban-footer {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0 0 24px;
+    opacity: 0.7;
+}
+.ban-logout-btn {
+    width: 100%;
+}
+
+/* ─── RESTRICTED COMPOSE OVERLAY ────────────────── */
+.compose-bar { position: relative; }
+
+.restricted-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    border-radius: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: not-allowed;
+    border: 1px solid var(--border);
+    border-radius: 0 0 16px 16px;
+    z-index: 10;
+}
+.restricted-overlay.hidden { display: none; }
+.restricted-overlay i {
+    font-size: 16px;
+    color: #f59e0b;
+}
