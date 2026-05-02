@@ -597,15 +597,19 @@ function renderMsg(msg) {
         ? `<span class="admin-badge"><i class="fas fa-shield-alt"></i> Chat Moderator</span>`
         : '';
 
+    const belowBubble = (adminBadge || deleteBtn)
+        ? `<div class="msg-below">${adminBadge}${deleteBtn}</div>`
+        : '';
+
     group.innerHTML = `
         <div class="msg-av" style="background:${avColor}">${avInitial}</div>
         <div class="msg-body">
             <div class="msg-meta">
                 <span class="sender">${sender}</span>
-                <span>${timeStr}</span>${deleteBtn}
+                <span>${timeStr}</span>
             </div>
             <div class="${bubbleClass}">${bubbleInner}</div>
-            ${adminBadge}
+            ${belowBubble}
         </div>
     `;
 
