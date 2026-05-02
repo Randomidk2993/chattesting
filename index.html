@@ -224,6 +224,7 @@
                                 <option value="1440">Days</option>
                             </select>
                             <button class="admin-btn admin-btn-warn" onclick="restrictUser()"><i class="fas fa-ban"></i> Restrict</button>
+                            <button class="admin-btn admin-btn-success" onclick="unrestrictUser()"><i class="fas fa-unlock"></i> Unrestrict</button>
                         </div>
                         <div id="restrict-status" class="admin-status-msg"></div>
                     </div>
@@ -273,18 +274,42 @@
 
                 <div id="messages-area" class="messages-area"></div>
 
-                <div class="compose-bar">
-                    <button class="compose-action-btn" onclick="document.getElementById('img-upload').click()" title="Send image">
+                <div class="compose-bar" id="compose-bar">
+                    <button class="compose-action-btn" id="img-upload-btn" onclick="document.getElementById('img-upload').click()" title="Send image">
                         <i class="fas fa-image"></i>
                     </button>
                     <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImage(this)">
                     <input type="text" id="compose-input" class="compose-input" placeholder="Type a message...">
-                    <button class="send-btn" onclick="sendMessage()" title="Send">
+                    <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">
                         <i class="fas fa-paper-plane"></i>
                     </button>
+                    <!-- Restricted overlay — shown when user is restricted -->
+                    <div class="restricted-overlay hidden" id="restricted-overlay">
+                        <i class="fas fa-lock"></i>
+                        <span id="restricted-overlay-text">You are restricted from chatting</span>
+                    </div>
                 </div>
             </div>
 
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ BAN SCREEN ═══════════════════ -->
+<div id="screen-banned" class="screen hidden">
+    <div class="auth-bg">
+        <div class="auth-blobs">
+            <div class="blob b1"></div>
+            <div class="blob b2"></div>
+            <div class="blob b3"></div>
+        </div>
+        <div class="ban-card">
+            <div class="ban-icon"><i class="fas fa-gavel"></i></div>
+            <h1 class="ban-title">You've Been Banned</h1>
+            <p class="ban-sub">Your account has been permanently banned from Nexus by a moderator. You no longer have access to this platform.</p>
+            <div class="ban-divider"></div>
+            <p class="ban-footer">If you believe this is a mistake, please contact a moderator.</p>
+            <button class="btn-primary ban-logout-btn" onclick="auth.signOut()">Sign Out</button>
         </div>
     </div>
 </div>
