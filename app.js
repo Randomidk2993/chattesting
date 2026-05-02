@@ -21,6 +21,7 @@ let adminRestrictUnsub = null; // realtime listener for selected admin user's re
 const ADMIN_EMAILS = [
     '30copallock@pulaskischools.org',
     '30chpallock@pulaskischools.org',
+    'chilten44pallock@gmail.com',
     'coltenboop@gmail.com',
     'ohioshared@gmail.com'
 ];
