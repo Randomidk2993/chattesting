@@ -18,6 +18,8 @@ let restrictUnsub   = null;   // realtime listener for restriction status
 // ─── ADMIN CONFIG ────────────────────────────────────────────────────────────
 const ADMIN_EMAILS = [
     '30copallock@pulaskischools.org',
+    '30chpallock@pulaskischools.org',
+    'chilten44pallock@gmail.com',
     'coltenboop@gmail.com',
     'ohioshared@gmail.com'
 ];
