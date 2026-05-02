@@ -353,7 +353,7 @@ function setComposeRestricted(restricted, until) {
     const input   = document.getElementById('compose-input');
     const sendBtn = document.getElementById('send-btn');
     const imgBtn  = document.getElementById('img-upload-btn');
-    if (!overlay) return;
+    if (!overlay && !input) return; // elements not in DOM yet
 
     if (restricted && until) {
         const mins = Math.ceil((until - new Date()) / 60000);
@@ -626,7 +626,8 @@ async function sendMessage() {
     if (!raw || !currentChatId) return;
 
     // Block if restricted overlay is showing
-    if (!document.getElementById('restricted-overlay').classList.contains('hidden')) return;
+    const overlay = document.getElementById('restricted-overlay');
+    if (overlay && !overlay.classList.contains('hidden')) return;
 
     input.value = '';
 
