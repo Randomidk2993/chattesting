@@ -52,7 +52,8 @@ service cloud.firestore {
     // Only admins can create or update restrictions. User or admin can delete.
     match /restrictions/{userId} {
       allow read:   if request.auth != null && request.auth.uid == userId;
-      allow write:  if isAdmin();
+      allow create,
+            update: if isAdmin();
       allow delete: if isAdmin() || request.auth.uid == userId;
     }
 
