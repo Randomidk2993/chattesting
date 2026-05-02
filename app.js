@@ -12,6 +12,8 @@ let currentChatId   = null;
 let msgUnsub        = null;
 let chatsUnsub      = null;
 let lastDateStr     = null;
+let banUnsub        = null;   // realtime listener for ban status
+let restrictUnsub   = null;   // realtime listener for restriction status
 
 // ─── ADMIN CONFIG ────────────────────────────────────────────────────────────
 const ADMIN_EMAILS = [
@@ -176,8 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!snap.exists) {
                 showScreen('screen-username');
             } else {
+                const data = snap.data();
+                if (data.banned) {
+                    showScreen('screen-banned');
+                    return;
+                }
                 currentUser     = user;
-                currentUserData = snap.data();
+                currentUserData = data;
                 bootApp();
             }
         } catch (err) {
@@ -290,13 +297,83 @@ function bootApp() {
     renderAvatar('footer-avatar',  currentUserData.username, currentUserData.color);
     document.getElementById('footer-username').textContent = currentUserData.username;
 
-    // Show admin button only for admin emails
     if (isAdmin()) {
         document.getElementById('nav-admin').classList.remove('hidden');
     }
 
     loadConvList();
     pruneOldMessages();
+    startBanListener();
+    startRestrictionListener();
+}
+
+// ─── REALTIME BAN LISTENER ────────────────────────────────────────────────────
+function startBanListener() {
+    if (banUnsub) banUnsub();
+    banUnsub = db.collection('users').doc(currentUser.uid)
+        .onSnapshot(snap => {
+            if (!snap.exists) return;
+            const data = snap.data();
+            if (data.banned) {
+                // Tear everything down and show ban screen
+                if (msgUnsub)    msgUnsub();
+                if (chatsUnsub)  chatsUnsub();
+                if (restrictUnsub) restrictUnsub();
+                showScreen('screen-banned');
+            }
+        });
+}
+
+// ─── REALTIME RESTRICTION LISTENER ───────────────────────────────────────────
+function startRestrictionListener() {
+    if (restrictUnsub) restrictUnsub();
+    restrictUnsub = db.collection('restrictions').doc(currentUser.uid)
+        .onSnapshot(snap => {
+            if (snap.exists) {
+                const data = snap.data();
+                const until = data.until ? data.until.toDate() : null;
+                if (until && until > new Date()) {
+                    setComposeRestricted(true, until);
+                    // Schedule auto-lift when restriction expires
+                    const ms = until - new Date();
+                    setTimeout(() => setComposeRestricted(false), ms);
+                } else {
+                    // Doc exists but already expired — clean up
+                    setComposeRestricted(false);
+                    db.collection('restrictions').doc(currentUser.uid).delete().catch(() => {});
+                }
+            } else {
+                setComposeRestricted(false);
+            }
+        });
+}
+
+function setComposeRestricted(restricted, until) {
+    const overlay = document.getElementById('restricted-overlay');
+    const input   = document.getElementById('compose-input');
+    const sendBtn = document.getElementById('send-btn');
+    const imgBtn  = document.getElementById('img-upload-btn');
+    if (!overlay) return;
+
+    if (restricted && until) {
+        const mins = Math.ceil((until - new Date()) / 60000);
+        const label = mins >= 1440
+            ? `${Math.ceil(mins/1440)} day(s)`
+            : mins >= 60
+            ? `${Math.ceil(mins/60)} hour(s)`
+            : `${mins} minute(s)`;
+        document.getElementById('restricted-overlay-text').textContent =
+            `You are restricted from chatting for ${label}`;
+        overlay.classList.remove('hidden');
+        if (input)   { input.disabled = true; input.value = ''; }
+        if (sendBtn) sendBtn.disabled = true;
+        if (imgBtn)  imgBtn.disabled  = true;
+    } else {
+        overlay.classList.add('hidden');
+        if (input)   input.disabled   = false;
+        if (sendBtn) sendBtn.disabled = false;
+        if (imgBtn)  imgBtn.disabled  = false;
+    }
 }
 
 // ─── AUTO-DELETE MESSAGES OLDER THAN 7 DAYS ──────────────────────────────────
@@ -548,26 +625,8 @@ async function sendMessage() {
     const raw   = input.value.trim();
     if (!raw || !currentChatId) return;
 
-    // Check if user is restricted
-    const restrictSnap = await db.collection('restrictions').doc(currentUser.uid).get();
-    if (restrictSnap.exists) {
-        const data = restrictSnap.data();
-        if (data.until && data.until.toDate() > new Date()) {
-            const mins = Math.ceil((data.until.toDate() - new Date()) / 60000);
-            alert(`You are restricted from chatting for ${mins} more minute(s).`);
-            return;
-        } else {
-            // Restriction expired — clean up
-            await db.collection('restrictions').doc(currentUser.uid).delete();
-        }
-    }
-
-    // Check if user is banned
-    if (currentUserData.banned) {
-        alert('You have been banned from this platform.');
-        logout();
-        return;
-    }
+    // Block if restricted overlay is showing
+    if (!document.getElementById('restricted-overlay').classList.contains('hidden')) return;
 
     input.value = '';
 
@@ -753,8 +812,10 @@ async function openOrCreateDM(otherId, otherUser) {
 
 // ─── LOGOUT ───────────────────────────────────────────────────────────────────
 function logout() {
-    if (msgUnsub)   msgUnsub();
-    if (chatsUnsub) chatsUnsub();
+    if (msgUnsub)      msgUnsub();
+    if (chatsUnsub)    chatsUnsub();
+    if (banUnsub)      banUnsub();
+    if (restrictUnsub) restrictUnsub();
     currentUser     = null;
     currentUserData = null;
     currentChatId   = null;
@@ -879,6 +940,17 @@ async function restrictUser() {
     } catch (err) {
         console.error('Restrict error:', err);
         setAdminStatus('restrict-status', 'Failed to restrict user. Check Firestore rules.');
+    }
+}
+
+async function unrestrictUser() {
+    if (!adminSelectedUser) return;
+    try {
+        await db.collection('restrictions').doc(adminSelectedUser.uid).delete();
+        setAdminStatus('restrict-status', `${adminSelectedUser.username} has been unrestricted.`, true);
+    } catch (err) {
+        console.error('Unrestrict error:', err);
+        setAdminStatus('restrict-status', 'Failed to unrestrict user. Check Firestore rules.');
     }
 }
 
