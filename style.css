@@ -1048,3 +1048,94 @@ body {
 .admin-search-results::-webkit-scrollbar { width: 4px; }
 .admin-search-results::-webkit-scrollbar-track { background: transparent; }
 .admin-search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ══════════════════════════════════════════
+   AUDIO / VIDEO MESSAGES + UPLOAD PROGRESS
+   ══════════════════════════════════════════ */
+
+/* ─── Media bubble (audio & video) ──────── */
+.msg-bubble.media-bubble {
+    padding: 8px 10px;
+    background: var(--bubble-in) !important;
+    box-shadow: var(--sh-sm);
+    max-width: 320px;
+}
+.msg-group.own .msg-bubble.media-bubble {
+    background: linear-gradient(140deg, #2c3e8a, #4a1a7a) !important;
+}
+
+/* Audio player */
+.msg-audio-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.msg-media-icon {
+    font-size: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+.msg-group.own .msg-media-icon { color: #a0b4ff; }
+
+.msg-audio {
+    width: 220px;
+    height: 36px;
+    outline: none;
+    border-radius: 20px;
+    background: transparent;
+}
+/* Normalize audio controls across browsers */
+.msg-audio::-webkit-media-controls-panel { background: transparent; }
+
+/* Video player */
+.msg-video-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+}
+.msg-video {
+    display: block;
+    max-width: 280px;
+    max-height: 200px;
+    border-radius: 12px;
+    outline: none;
+    background: #000;
+}
+
+/* ─── Upload progress bar ────────────────── */
+.upload-progress-wrap {
+    padding: 6px 22px 10px;
+    background: var(--panel);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.upload-progress-wrap.hidden { display: none !important; }
+
+.upload-progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sub);
+}
+.upload-progress-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+}
+.upload-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), #7209b7);
+    border-radius: 99px;
+    transition: width 0.2s ease;
+}
+
+/* ─── Mobile tweaks for media ────────────── */
+@media (max-width: 640px) {
+    .msg-audio { width: 170px; }
+    .msg-video { max-width: 220px; max-height: 160px; }
+    .msg-bubble.media-bubble { max-width: 260px; }
+    .upload-progress-wrap { padding: 6px 14px 10px; }
+}
