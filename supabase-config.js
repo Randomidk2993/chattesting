@@ -5,7 +5,7 @@
 // ══════════════════════════════════════════
 
 const SUPABASE_URL  = 'https://lwhsfwbsbdqxjzqzigiy.supabase.co';
-const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY'; // ← paste your anon/public key here
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3aHNmd2JzYmRxeGp6cXppZ2l5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0ODI5NjIsImV4cCI6MjEwNDA1ODk2Mn0.MAWwViE0pgHEcEusKR5t5Z_pbBPoJsb__sk2n9HaiNE'; // ← paste your anon/public key here
 
 // Storage bucket names (create these in Supabase dashboard)
 const SUPABASE_AUDIO_BUCKET = 'nexus-audio';
