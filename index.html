@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="updatedetect.js"></script>
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -278,18 +278,40 @@
                 <div id="messages-area" class="messages-area"></div>
 
                 <div class="compose-bar" id="compose-bar">
+                    <!-- Image upload -->
                     <button class="compose-action-btn" id="img-upload-btn" onclick="document.getElementById('img-upload').click()" title="Send image">
                         <i class="fas fa-image"></i>
                     </button>
                     <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImage(this)">
+
+                    <!-- Audio upload (max 3 min) -->
+                    <button class="compose-action-btn" id="audio-upload-btn" onclick="document.getElementById('audio-upload').click()" title="Send audio (max 3 min)">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <input type="file" id="audio-upload" accept="audio/*" style="display:none" onchange="handleAudio(this)">
+
+                    <!-- Video clip upload (max 5 min) -->
+                    <button class="compose-action-btn" id="video-upload-btn" onclick="document.getElementById('video-upload').click()" title="Send video clip (max 5 min)">
+                        <i class="fas fa-film"></i>
+                    </button>
+                    <input type="file" id="video-upload" accept="video/mp4,video/quicktime,video/webm" style="display:none" onchange="handleVideo(this)">
+
                     <input type="text" id="compose-input" class="compose-input" placeholder="Type a message...">
                     <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">
                         <i class="fas fa-paper-plane"></i>
                     </button>
-                    <!-- Restricted overlay — shown when user is restricted -->
+                    <!-- Restricted overlay -->
                     <div class="restricted-overlay hidden" id="restricted-overlay">
                         <i class="fas fa-lock"></i>
                         <span id="restricted-overlay-text">You are restricted from chatting</span>
+                    </div>
+                </div>
+
+                <!-- Upload progress bar -->
+                <div id="upload-progress-wrap" class="upload-progress-wrap hidden">
+                    <div class="upload-progress-label" id="upload-progress-label">Uploading...</div>
+                    <div class="upload-progress-bar-track">
+                        <div class="upload-progress-bar" id="upload-progress-bar"></div>
                     </div>
                 </div>
             </div>
@@ -322,6 +344,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="app.js?v=3"></script>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
